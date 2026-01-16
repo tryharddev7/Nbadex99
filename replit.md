@@ -2,7 +2,7 @@
 
 ## Overview
 
-BallsDex is a Discord bot for collecting "countryballs" - collectible items that spawn in Discord servers. Users can catch, trade, and manage their collections. The project consists of two main components: a Discord bot built with discord.py and an admin panel built with Django.
+BallsDex is a Discord bot for collecting "countryballs" - collectible items that spawn in Discord channels. Users can catch, trade, and manage their collections. The project consists of two main components: a Discord bot built with discord.py and an admin panel built with Django for content management.
 
 ## User Preferences
 
@@ -10,62 +10,66 @@ Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 
-### Discord Bot (`ballsdex/`)
-- **Framework**: discord.py with application commands (slash commands)
-- **Database ORM**: Tortoise ORM for async database operations
-- **Structure**: Modular cog-based architecture where features are organized into "packages"
-  - `packages/balls/` - Core collection and inventory commands
-  - `packages/admin/` - Administrative commands for bot management
-  - `packages/trade/` - Trading system between players
-  - `packages/betting/` - Betting system for NBAs
-  - `packages/coins/` - Virtual currency and pack system
-  - `packages/config/` - Server configuration commands
-  - `packages/countryballs/` - Spawning logic for collectibles
+### Bot Architecture
+- **Framework**: discord.py with async/await patterns
+- **ORM**: Tortoise ORM for async database operations in the bot
+- **Package Structure**: Modular cog-based design under `ballsdex/packages/`
+  - `admin/` - Admin slash commands for bot management
+  - `balls/` - Core countryball inventory and interaction commands
+  - `betting/` - Player-to-player betting system
+  - `coins/` - Virtual currency and pack purchasing system
+  - `config/` - Server configuration commands
+  - `countryballs/` - Spawning mechanics (referenced but not shown)
+  - `trade/` - Trading system between players
 
-### Admin Panel (`admin_panel/`)
-- **Framework**: Django with custom admin site
-- **Purpose**: Web-based administration for managing balls, players, trades, and blacklists
-- **Authentication**: Discord OAuth2 via python-social-auth
-- **Models**: Django models mirror Tortoise ORM models in `bd_models/` app
-- **Image Generation**: Preview system for countryball card generation
+### Admin Panel Architecture
+- **Framework**: Django 5.x with custom admin site
+- **Authentication**: Discord OAuth2 via python-social-auth, with role-based access tied to Discord server roles
+- **ORM**: Django ORM with models mirroring Tortoise models in `bd_models/`
+- **Media Handling**: Uploaded images stored in `./admin_panel/media/`
+- **Image Generation**: Preview system renders countryball cards on-demand using PIL
 
-### Data Models (Core entities)
-- `Ball` - Collectible definitions (stats, artwork, rarity)
-- `BallInstance` - Individual collected items owned by players
-- `Player` - User accounts with privacy/donation policies
-- `Trade` / `TradeObject` - Trading system records
+### Data Models
+Key models include:
+- `Ball` - Countryball definitions (stats, images, rarity)
+- `BallInstance` - Individual caught countryballs owned by players
+- `Player` - User profiles with privacy/donation policies
 - `Special` - Limited-time event modifiers for balls
-- `Regime` / `Economy` - Visual themes for ball backgrounds
-- `Pack` - Purchasable card packs with virtual currency
-- `GuildConfig` - Per-server bot configuration
+- `Regime/Economy` - Visual customization categories
+- `Trade/TradeObject` - Trading history
+- `Pack/PlayerPack` - Purchasable card packs with virtual currency
+- `GuildConfig` - Per-server bot settings
+- `BlacklistedID/BlacklistedGuild` - Moderation blocklists
 
 ### Configuration
-- Settings loaded from `config.yml` (YAML format)
-- JSON schema reference available in `json-config-ref.json`
-- Environment variables for database URL (`BALLSDEXBOT_DB_URL` or `DATABASE_URL`)
+- Bot settings loaded from `config.yml` (YAML format with JSON schema reference in `json-config-ref.json`)
+- Database URL from environment variable `DATABASE_URL` or `BALLSDEXBOT_DB_URL`
+- Settings dataclass in `ballsdex/settings.py` provides typed access to configuration
 
 ## External Dependencies
 
 ### Database
-- **PostgreSQL** - Primary database (required)
-- Connection via Tortoise ORM (bot) and Django ORM (admin panel)
-- Database URL format: `postgres://user:password@host:port/dbname`
+- **PostgreSQL** - Primary database for both bot and admin panel
+- Connection URL supports both `postgres://` and `postgresql://` schemes (auto-converted for Tortoise compatibility)
 
-### External Services
-- **Discord API** - Bot functionality and OAuth2 authentication
-- **Prometheus** - Metrics collection (optional, configurable)
-- **Sentry** - Error tracking (optional, via sentry_sdk)
-- **Discord Webhooks** - Admin notifications from the panel
+### Discord Integration
+- Discord bot token required in config
+- Discord OAuth2 for admin panel authentication
+- Webhook notifications for admin actions
+
+### Monitoring
+- **Prometheus** - Metrics collection via `/metrics` endpoint
+- **Sentry** - Error tracking integration (optional)
 
 ### Key Python Dependencies
-- `discord.py` - Discord bot framework
-- `tortoise-orm` - Async ORM for the bot
+- `discord.py` - Discord API wrapper
+- `tortoise-orm` - Async ORM for bot
 - `Django` - Admin panel framework
-- `Pillow` - Image generation for collectible cards
+- `Pillow (PIL)` - Image generation for countryball cards
 - `aiohttp` - Async HTTP client
 - `pyyaml` - Configuration parsing
-- `poetry` - Dependency management
 
-### Infrastructure (Docker)
-- Docker Compose setup available for PostgreSQL and Redis
-- Separate containers for bot and admin panel
+### Development Tools
+- Poetry for dependency management
+- Docker Compose for local development (PostgreSQL + Redis)
+- Pre-commit hooks for code quality
